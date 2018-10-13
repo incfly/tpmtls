@@ -171,6 +171,7 @@ func runServer(l net.Listener) {
 			return
 		}
 		go func() {
+			// TODO: figure out why connection is the contraint here, we run too fast?
 			defer conn.Close()
 			fmt.Println("Handle Connection")
 			io.Copy(conn, conn)
