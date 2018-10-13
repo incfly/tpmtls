@@ -36,18 +36,17 @@ func main() {
 	}
 	fmt.Println("createClientCert OK")
 
-	srv, err := startServer()
+	srv, err := createServer()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("startServer OK")
+	go runServer(srv)
+	fmt.Println("runServer OK")
 	defer srv.Close()
 
 	for i := 0; i < 1000; i++ {
-		if i%20 == 0 {
-			fmt.Printf("making connection %v\n", i)
-		}
+		fmt.Printf("making connection %v\n", i)
 		conn, err := makeConnection(srv, crt)
 		if err != nil {
 			fmt.Println("tls.Dial:", err)
@@ -66,7 +65,7 @@ func main() {
 			return
 		}
 		if got := string(resp[:count]); got == "hi" {
-			// fmt.Println("echo message OK")
+			fmt.Println("echo message OK")
 		} else {
 			fmt.Printf("echo message wrong, got: %q %v\n", got, i)
 			return
@@ -148,7 +147,7 @@ func createServerCert() (*tls.Certificate, error) {
 	return &tls.Certificate{PrivateKey: pk, Leaf: template, Certificate: [][]byte{derBytes}}, nil
 }
 
-func startServer() (net.Listener, error) {
+func createServer() (net.Listener, error) {
 	crt, err := createServerCert()
 	if err != nil {
 		return nil, err
@@ -161,16 +160,19 @@ func startServer() (net.Listener, error) {
 	if err != nil {
 		return nil, err
 	}
+	return lis, nil
+}
 
-	go func() {
-		conn, err := lis.Accept()
+func runServer(l net.Listener) {
+	for {
+		conn, err := l.Accept()
 		if err != nil {
-			fmt.Println("Accept:", err)
+			fmt.Println("Accept Error:", err)
 			return
 		}
-		fmt.Println("Accept OK")
-		io.Copy(conn, conn)
-	}()
-
-	return lis, nil
+		go func() {
+			fmt.Println("Handle Connection")
+			io.Copy(conn, conn)
+		}()
+	}
 }
