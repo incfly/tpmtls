@@ -171,6 +171,7 @@ func runServer(l net.Listener) {
 			return
 		}
 		go func() {
+			defer conn.Close()
 			fmt.Println("Handle Connection")
 			io.Copy(conn, conn)
 		}()
