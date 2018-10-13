@@ -74,6 +74,20 @@ func main() {
 	}
 }
 
+func makeConnection(srv net.Listener, clientCert *tls.Certificate) (*tls.Conn, error) {
+	conn, err := tls.Dial("tcp", srv.Addr().String(), &tls.Config{
+		InsecureSkipVerify: true,
+		GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
+			return clientCert, nil
+		},
+	})
+	if err != nil {
+		fmt.Println("tls.Dial:", err)
+		return nil, err
+	}
+	return conn, nil
+}
+
 func createClientCert(pk crypto.Signer) (*tls.Certificate, error) {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
