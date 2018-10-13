@@ -44,33 +44,33 @@ func main() {
 	fmt.Println("startServer OK")
 	defer srv.Close()
 
-	conn, err := tls.Dial("tcp", srv.Addr().String(), &tls.Config{
-		InsecureSkipVerify: true,
-		GetClientCertificate: func(*tls.CertificateRequestInfo) (*tls.Certificate, error) {
-			return crt, nil
-		},
-	})
-	if err != nil {
-		fmt.Println("tls.Dial:", err)
-		return
-	}
-	defer conn.Close()
-	fmt.Println("dial OK")
-
-	if _, err := conn.Write([]byte("hi")); err != nil {
-		fmt.Println("Write:", err)
-		return
-	}
-	resp := make([]byte, 1024)
-	count, err := conn.Read(resp)
-	if err != nil {
-		fmt.Println("Read:", err)
-		return
-	}
-	if got := string(resp[:count]); got == "hi" {
-		fmt.Println("echo message OK")
-	} else {
-		fmt.Printf("echo message wrong, got: %q\n", got)
+	for i := 0; i < 1000; i++ {
+		if i%20 == 0 {
+			fmt.Printf("making connection %v\n", i)
+		}
+		conn, err := makeConnection(srv, crt)
+		if err != nil {
+			fmt.Println("tls.Dial:", err)
+			return
+		}
+		defer conn.Close()
+		fmt.Println("dial OK")
+		if _, err := conn.Write([]byte("hi")); err != nil {
+			fmt.Println("Write:", err)
+			return
+		}
+		resp := make([]byte, 1024)
+		count, err := conn.Read(resp)
+		if err != nil {
+			fmt.Println("Read:", err)
+			return
+		}
+		if got := string(resp[:count]); got == "hi" {
+			// fmt.Println("echo message OK")
+		} else {
+			fmt.Printf("echo message wrong, got: %q %v\n", got, i)
+			return
+		}
 	}
 }
 
