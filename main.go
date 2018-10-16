@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"flag"
 	"fmt"
 	"io"
 	"math/big"
@@ -19,7 +20,12 @@ import (
 	"github.com/google/go-tpm/tpm2"
 )
 
+var (
+	iter = flag.Int("iter", 1000, "the number of the iterations")
+)
+
 func main() {
+	flag.Parse()
 	pk, err := tpmkey.PrimaryECC("/dev/tpm0", tpm2.HandleOwner)
 	if err != nil {
 		fmt.Println(err)
@@ -45,7 +51,7 @@ func main() {
 	fmt.Println("runServer OK")
 	defer srv.Close()
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < *iter; i++ {
 		fmt.Printf("making connection %v\n", i)
 		conn, err := makeConnection(srv, crt)
 		if err != nil {
@@ -53,21 +59,14 @@ func main() {
 			return
 		}
 		defer conn.Close()
-		fmt.Println("dial OK")
 		if _, err := conn.Write([]byte("hi")); err != nil {
 			fmt.Println("Write:", err)
 			return
 		}
 		resp := make([]byte, 1024)
-		count, err := conn.Read(resp)
+		_, err = conn.Read(resp)
 		if err != nil {
 			fmt.Println("Read:", err)
-			return
-		}
-		if got := string(resp[:count]); got == "hi" {
-			fmt.Println("echo message OK")
-		} else {
-			fmt.Printf("echo message wrong, got: %q %v\n", got, i)
 			return
 		}
 	}
