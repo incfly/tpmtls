@@ -51,6 +51,7 @@ func main() {
 	fmt.Println("runServer OK")
 	defer srv.Close()
 
+	fmt.Println("start to measure, iter = ", *iter)
 	start := time.Now()
 	for i := 0; i < *iter; i++ {
 		// fmt.Printf("making connection %v\n", i)
