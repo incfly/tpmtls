@@ -51,8 +51,9 @@ func main() {
 	fmt.Println("runServer OK")
 	defer srv.Close()
 
+	start := time.Now()
 	for i := 0; i < *iter; i++ {
-		fmt.Printf("making connection %v\n", i)
+		// fmt.Printf("making connection %v\n", i)
 		conn, err := makeConnection(srv, crt)
 		if err != nil {
 			fmt.Println("tls.Dial:", err)
@@ -70,6 +71,7 @@ func main() {
 		}
 		conn.Close()
 	}
+	fmt.Printf("finish the tls handshake in %v\n", time.Now().Sub(start))
 }
 
 func makeConnection(srv net.Listener, clientCert *tls.Certificate) (*tls.Conn, error) {
@@ -171,7 +173,7 @@ func runServer(l net.Listener) {
 		}
 		go func(conn net.Conn) {
 			// TODO: figure out why connection is the contraint here, we run too fast?
-			fmt.Println("Handle Connection")
+			// fmt.Println("Handle Connection")
 			io.Copy(conn, conn)
 			conn.Close()
 		}(clientConn)
