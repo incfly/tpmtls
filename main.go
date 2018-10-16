@@ -58,7 +58,6 @@ func main() {
 			fmt.Println("tls.Dial:", err)
 			return
 		}
-		defer conn.Close()
 		if _, err := conn.Write([]byte("hi")); err != nil {
 			fmt.Println("Write:", err)
 			return
@@ -69,6 +68,7 @@ func main() {
 			fmt.Println("Read:", err)
 			return
 		}
+		conn.Close()
 	}
 }
 
@@ -164,16 +164,16 @@ func createServer() (net.Listener, error) {
 
 func runServer(l net.Listener) {
 	for {
-		conn, err := l.Accept()
+		clientConn, err := l.Accept()
 		if err != nil {
 			fmt.Println("Accept Error:", err)
 			return
 		}
-		go func() {
+		go func(conn net.Conn) {
 			// TODO: figure out why connection is the contraint here, we run too fast?
-			defer conn.Close()
 			fmt.Println("Handle Connection")
 			io.Copy(conn, conn)
-		}()
+			conn.Close()
+		}(clientConn)
 	}
 }
