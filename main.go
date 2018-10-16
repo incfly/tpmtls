@@ -26,6 +26,7 @@ var (
 
 func main() {
 	flag.Parse()
+	fmt.Println("start to measure, iter = ", *iter)
 	pk, err := tpmkey.PrimaryECC("/dev/tpm0", tpm2.HandleOwner)
 	if err != nil {
 		fmt.Println(err)
@@ -51,10 +52,11 @@ func main() {
 	fmt.Println("runServer OK")
 	defer srv.Close()
 
-	fmt.Println("start to measure, iter = ", *iter)
 	start := time.Now()
 	for i := 0; i < *iter; i++ {
-		// fmt.Printf("making connection %v\n", i)
+		if i%100 == 0 {
+			fmt.Printf("making connection %v\n", i)
+		}
 		conn, err := makeConnection(srv, crt)
 		if err != nil {
 			fmt.Println("tls.Dial:", err)
